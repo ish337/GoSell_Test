@@ -3,10 +3,15 @@ networks:
   myAppNetwork:
     driver: bridge
 
+volumes:
+  pg_data:
+  api_backup:
+  api_images:
+
 services:
   postgresServerDb:
     container_name: container-postgres
-    image: postgres:latest
+    image: postgres:17.9-bookworm
     ports:
       - "5022:5432"
     environment:
@@ -16,8 +21,8 @@ services:
     networks:
       - myAppNetwork
     volumes:
-#       - d:/web/pd322/postgresql:/var/lib/postgresql/data  # Use the volume name msvol here
-        - /data/postgresql/data:/var/lib/postgresql/data
+      # Use named volume instead of /data/...
+      - pg_data:/var/lib/postgresql/data
     deploy:
       restart_policy:
         condition: on-failure
@@ -25,7 +30,8 @@ services:
 
   app:
     container_name: olx_container
-    image: sashok9203/olx-asp-api
+    build: ./OLX.API
+    image: olx-asp-api
     ports:
       - "5817:8080"
     networks:
@@ -33,18 +39,17 @@ services:
     depends_on:
       - postgresServerDb
     volumes:
-     - /volumes/olx-asp/backup:/app/backup 
-     - /volumes/olx-asp/images:/app/uploading  # Use the volume name appvol here
+     # Use named volumes instead of /volumes/olx-asp/...
+     - api_backup:/app/backup
+     - api_images:/app/uploading
     deploy:
       restart_policy:
         condition: on-failure
         max_attempts: 5
-  
   client:
     container_name: olx_client_container
-    image: sashok9203/olx-client
+    build: ./OLX.Frontend
+    image: olx-client
     restart: on-failure
     ports:
       - "5092:80"
-      
-
