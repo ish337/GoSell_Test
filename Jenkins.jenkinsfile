@@ -1,0 +1,57 @@
+#!groovy
+
+pipeline {
+    agent none
+
+    environment {
+        IMAGE_NAME_API = "./OLX.API"
+        IMAGE_NAME_FRONT = "./OLX.Frontend"
+    }
+
+    stages {
+
+        stage("Build Back") {
+            agent { label 'gosell' }
+            steps {
+                echo 'Building back image ...'
+                sh """
+                    cd OLX.API
+                    docker build --no-cache \
+                        -t ${IMAGE_NAME_API}:${env.BUILD_NUMBER} \
+                        -t ${IMAGE_NAME_API}:latest \
+                        .
+                    cd ..    
+                """
+            }
+        }
+
+        stage("Build Front") {
+            agent { label 'gosell' }
+            steps {
+                echo 'Building front image ...'
+                sh """
+                    cd OLX.Frontend
+                    docker build --no-cache \
+                        -t ${IMAGE_NAME_FRONT}:${env.BUILD_NUMBER} \
+                        -t ${IMAGE_NAME_FRONT}:latest \
+                        .
+                    cd ..    
+                """
+            }
+        }
+
+        stage("Deploy GoSell on remote server") {
+            agent { label 'gosell' }
+            steps {
+                echo "Deploying GoSell on remote server ..."  
+                sh """
+                        docker compose down --remove-orphans || true
+
+                        IMAGE_TAG=${env.BUILD_NUMBER} docker compose up -d
+                        docker image prune -f
+                """
+            }
+        }
+
+    }
+}
