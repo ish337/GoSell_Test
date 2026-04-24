@@ -4,8 +4,8 @@ pipeline {
     agent none
 
     environment {
-        IMAGE_NAME_API = "./OLX.API"
-        IMAGE_NAME_FRONT = "./OLX.Frontend"
+        IMAGE_NAME_API = "olx-asp-api"
+        IMAGE_NAME_FRONT = "olx-client "
     }
 
     stages {
