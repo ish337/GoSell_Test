@@ -6,6 +6,8 @@ pipeline {
     environment {
         IMAGE_NAME_API = "olx-asp-api"
         IMAGE_NAME_FRONT = "olx-client"
+        CONTAINER_NAME_FRONT = "olx_client_container"
+        CONTAINER_NAME_BACK = "olx_container"
     }
 
     stages {
@@ -47,9 +49,9 @@ pipeline {
                 sh """
 
                         echo "🧹 Cleaning up old Nagios container and image..."
-                        docker stop \$(docker ps -a -q) || true
-                        docker rm \$(docker ps -a -q) || true
-                        docker rmi -f \$(docker images -aq) || true
+                        docker stop ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} || true
+                        docker rm ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} || true
+                        docker rmi -f ${IMAGE_NAME_API} ${IMAGE_NAME_FRONT} || true
                         docker compose down --remove-orphans || true
 
                         IMAGE_TAG=${env.BUILD_NUMBER} docker compose up -d
