@@ -47,9 +47,9 @@ pipeline {
                 sh """
 
                         echo "🧹 Cleaning up old Nagios container and image..."
-                        docker stop $(docker ps -a -q) || true
-                        docker rm $(docker ps -a -q) || true
-                        docker rmi -f $(docker images -aq) || true
+                        'docker stop $(docker ps -a -q) || true'
+                        'docker rm $(docker ps -a -q) || true'
+                        'docker rmi -f $(docker images -aq) || true'
                         docker compose down --remove-orphans || true
 
                         IMAGE_TAG=${env.BUILD_NUMBER} docker compose up -d
