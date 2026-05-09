@@ -8,6 +8,7 @@ pipeline {
         IMAGE_NAME_FRONT = "olx-client"
         CONTAINER_NAME_FRONT = "olx_client_container"
         CONTAINER_NAME_BACK = "olx_container"
+        CONTAINER_NAME_DB = "container-postgres"
     }
 
     stages {
@@ -49,8 +50,8 @@ pipeline {
                 sh """
                         cd Tools
                         echo "Cleaning up old containers and images..."
-                        docker stop ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} || true
-                        docker rm ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} || true
+                        docker stop ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} ${CONTAINER_NAME_DB} || true
+                        docker rm ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} ${CONTAINER_NAME_DB} || true
                         docker rmi -f ${IMAGE_NAME_API} ${IMAGE_NAME_FRONT} || true
                         docker compose down --remove-orphans || true
 
