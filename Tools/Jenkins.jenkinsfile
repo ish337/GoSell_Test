@@ -48,7 +48,7 @@ pipeline {
                 echo "Deploying GoSell on remote server ..."  
                 sh """
 
-                        echo "🧹 Cleaning up old Nagios container and image..."
+                        echo "Cleaning up old containers and images..."
                         docker stop ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} || true
                         docker rm ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} || true
                         docker rmi -f ${IMAGE_NAME_API} ${IMAGE_NAME_FRONT} || true

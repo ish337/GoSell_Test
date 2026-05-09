@@ -19,7 +19,7 @@ services:
       - POSTGRES_PASSWORD=*dmUntdOidd3d_#WTi4B9ZoZp%rSDj4Imds07djc*
       - POSTGRES_DB=olxDb
     networks:
-      - myAppNetwork
+      - myAppNetworka
     volumes:
       # Use named volume instead of /data/...
       - pg_data:/var/lib/postgresql/data
