@@ -5,7 +5,7 @@ MASTER_IP="${master_ip}"
 AGENT_SECRET="PLACEHOLDER"   # replace after first master boot — see notes at bottom
 AGENT_NAME="agent-1"
 AGENT_WORKDIR="/opt/jenkins-agent"
-JENKINS_URL="http://$${MASTER_IP}:80"
+JENKINS_URL="http://$${MASTER_IP}:8080"
 
 # ── Install Java (required for the agent) ──
 sudo apt -y update
