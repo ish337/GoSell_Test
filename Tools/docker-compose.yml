@@ -1,4 +1,3 @@
-version: "3.9"
 networks:
   myAppNetwork:
     driver: bridge
@@ -19,7 +18,7 @@ services:
       - POSTGRES_PASSWORD=*dmUntdOidd3d_#WTi4B9ZoZp%rSDj4Imds07djc*
       - POSTGRES_DB=olxDb
     networks:
-      - myAppNetworka
+      - myAppNetwork
     volumes:
       # Use named volume instead of /data/...
       - pg_data:/var/lib/postgresql/data
