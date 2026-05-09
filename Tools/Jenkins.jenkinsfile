@@ -47,7 +47,7 @@ pipeline {
             steps {
                 echo "Deploying GoSell on remote server ..."  
                 sh """
-
+                        cd Tools
                         echo "Cleaning up old containers and images..."
                         docker stop ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} || true
                         docker rm ${CONTAINER_NAME_FRONT} ${CONTAINER_NAME_BACK} || true
