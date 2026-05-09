@@ -30,7 +30,7 @@ services:
 
   app:
     container_name: olx_container
-    build: OLX.API
+    build: ../OLX.API
     image: olx-asp-api
     ports:
       - "5817:8080"
@@ -48,7 +48,7 @@ services:
         max_attempts: 5
   client:
     container_name: olx_client_container
-    build: OLX.Frontend
+    build: ../OLX.Frontend
     image: olx-client
     restart: on-failure
     ports:
