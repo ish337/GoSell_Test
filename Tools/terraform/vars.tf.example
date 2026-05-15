@@ -33,3 +33,9 @@ variable "my_ip" {
   description = "Your public IP"
   default     = ""
 }
+
+variable "jenkins_admin_password" {
+  type        = string
+  description = "Password for the Jenkins admin user"
+  default     = ""
+}

@@ -52,3 +52,5 @@ services:
     restart: on-failure
     ports:
       - "5092:80"
+    networks:
+      - myAppNetwork

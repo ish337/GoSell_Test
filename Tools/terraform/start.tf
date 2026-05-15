@@ -1,8 +1,25 @@
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+    tls = {
+      source = "hashicorp/tls"
+    }
+  }
+}
+
 // Provider
 provider "aws" {
   region     = "us-east-1"
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
+}
+
+// Keys for  master to agent connection
+resource "tls_private_key" "jenkins_agent" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
 
 // Look up the default VPC
@@ -23,9 +40,8 @@ data "aws_subnets" "default" {
   }
 }
 
-// ============================================================
-//  EC2 #1 — Jenkins Master
-// ============================================================
+
+// Jenkins Master
 resource "aws_instance" "jenkins_master" {
   subnet_id              = data.aws_subnets.default.ids[0]
   ami                    = var.ami-id
@@ -46,12 +62,14 @@ resource "aws_instance" "jenkins_master" {
     Name = "Jenkins-Master"
   }
 
-  user_data = file("files/install_jenkins_master.sh")
+  user_data = templatefile("files/install_jenkins_master.sh", {
+    agent_ip        = aws_instance.jenkins_agent.private_ip
+    private_key_pem = tls_private_key.jenkins_agent.private_key_pem
+    admin_password  = var.jenkins_admin_password
+  })
 }
 
-// ============================================================
-//  EC2 #2 — Jenkins Agent (with Docker)
-// ============================================================
+// Jenkins Agent
 resource "aws_instance" "jenkins_agent" {
   subnet_id              = data.aws_subnets.default.ids[0]
   ami                    = var.ami-id
@@ -72,23 +90,20 @@ resource "aws_instance" "jenkins_agent" {
     Name = "Jenkins-Agent"
   }
 
-  # Pass the master's private IP so the agent script knows where to connect
+  # Pass the SSH public key so the master can connect to this agent
   user_data = templatefile("files/install_jenkins_agent.sh", {
-    master_ip = aws_instance.jenkins_master.private_ip
+    public_key = tls_private_key.jenkins_agent.public_key_openssh
   })
 }
 
 
-// ============================================================
-//  Security Group — Jenkins Master
-// ============================================================
+//  Security Group - Master
 resource "aws_security_group" "jenkins_master_sg" {
-  name        = "JenkinsMasterSG"
-  description = "SG for Jenkins Master - web UI from my IP, agent traffic on 80"
+  name        = "MasterSG"
+  description = "SG Jenkins Master, web UI from specific IP, agent traffic on 8080"
   vpc_id      = data.aws_vpc.default.id
 }
 
-// SSH from my IP
 resource "aws_security_group_rule" "master_ssh" {
   type              = "ingress"
   from_port         = 22
@@ -96,32 +111,29 @@ resource "aws_security_group_rule" "master_ssh" {
   protocol          = "tcp"
   cidr_blocks       = [var.my_ip]
   security_group_id = aws_security_group.jenkins_master_sg.id
-  description       = "SSH from my IP"
+  description       = "SSH from specific IP"
 }
 
-// Jenkins Web UI (port 80) from my IP
 resource "aws_security_group_rule" "master_http_my_ip" {
   type              = "ingress"
-  from_port         = 80
-  to_port           = 80
+  from_port         = 8080
+  to_port           = 8080
   protocol          = "tcp"
   cidr_blocks       = [var.my_ip]
   security_group_id = aws_security_group.jenkins_master_sg.id
-  description       = "Jenkins UI from my IP"
+  description       = "UI SG"
 }
 
-// Jenkins port 80 from the agent SG (JNLP / agent.jar traffic)
 resource "aws_security_group_rule" "master_http_from_agent" {
   type                     = "ingress"
-  from_port                = 80
-  to_port                  = 80
+  from_port                = 8080
+  to_port                  = 8080
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.jenkins_agent_sg.id
   security_group_id        = aws_security_group.jenkins_master_sg.id
-  description              = "Jenkins agent - master on port 80"
+  description              = "Jenkins agent - master on port 8080"
 }
 
-// ICMP ping from anywhere (handy for debugging)
 resource "aws_security_group_rule" "master_icmp" {
   type              = "ingress"
   from_port         = 8
@@ -132,7 +144,6 @@ resource "aws_security_group_rule" "master_icmp" {
   description       = "Allow ping"
 }
 
-// Egress — allow all
 resource "aws_security_group_rule" "master_egress" {
   type              = "egress"
   from_port         = 0
@@ -143,16 +154,13 @@ resource "aws_security_group_rule" "master_egress" {
 }
 
 
-// ============================================================
-//  Security Group — Jenkins Agent
-// ============================================================
+//  Security Group - Agent
 resource "aws_security_group" "jenkins_agent_sg" {
   name        = "JenkinsAgentSG"
-  description = "SG for Jenkins Agent - SSH from my IP, traffic from master"
+  description = "Agent SG, SSH from specific IP, traffic from master"
   vpc_id      = data.aws_vpc.default.id
 }
 
-// SSH from my IP
 resource "aws_security_group_rule" "agent_ssh" {
   type              = "ingress"
   from_port         = 22
@@ -163,7 +171,6 @@ resource "aws_security_group_rule" "agent_ssh" {
   description       = "SSH from my IP"
 }
 
-// Allow all traffic from the master SG (Jenkins master → agent comms)
 resource "aws_security_group_rule" "agent_from_master" {
   type                     = "ingress"
   from_port                = 0
@@ -174,7 +181,6 @@ resource "aws_security_group_rule" "agent_from_master" {
   description              = "All TCP from Jenkins master"
 }
 
-// ICMP ping
 resource "aws_security_group_rule" "agent_icmp" {
   type              = "ingress"
   from_port         = 8
@@ -185,7 +191,6 @@ resource "aws_security_group_rule" "agent_icmp" {
   description       = "Allow ping"
 }
 
-// Egress — allow all
 resource "aws_security_group_rule" "agent_egress" {
   type              = "egress"
   from_port         = 0
@@ -196,20 +201,18 @@ resource "aws_security_group_rule" "agent_egress" {
 }
 
 
-// ============================================================
 //  Outputs
-// ============================================================
 output "jenkins_master_public_ip" {
   value       = aws_instance.jenkins_master.public_ip
-  description = "Public IP of Jenkins Master - open http://<this-ip> in browser"
+  description = "Public IP - Jenkins Master"
 }
 
 output "jenkins_agent_public_ip" {
   value       = aws_instance.jenkins_agent.public_ip
-  description = "Public IP of Jenkins Agent (SSH access)"
+  description = "Public IP - Jenkins Agent"
 }
 
 output "jenkins_master_private_ip" {
   value       = aws_instance.jenkins_master.private_ip
-  description = "Private IP of Jenkins Master (used by agent)"
+  description = "Private IP - Jenkins Master"
 }
