@@ -1,4 +1,4 @@
-const SERVER_HOST: string = import.meta.env.VITE_APP_SERVER_HOST;
+const SERVER_HOST: string = import.meta.env.VITE_APP_SERVER_HOST || '';
 const API_URL: string = SERVER_HOST + '/api'
 const IMAGES_FOLDER: string = import.meta.env.VITE_APP_IMAGES_FOLDER;
 const IMAGES_URL: string = SERVER_HOST + IMAGES_FOLDER;
