@@ -30,6 +30,7 @@ sudo java -jar /tmp/jenkins-plugin-manager.jar \
   --plugin-download-directory /var/lib/jenkins/plugins \
   --plugins \
     configuration-as-code \
+    job-dsl \
     ssh-slaves \
     workflow-aggregator \
     git \
@@ -84,6 +85,31 @@ jenkins:
             sshHostKeyVerificationStrategy:
               nonVerifyingKeyVerificationStrategy: {}
         retentionStrategy: "always"
+
+jobs:
+  - script: |
+      pipelineJob('test') {
+        description('test')
+
+        triggers {
+          scm('* * * * *')
+        }
+
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/ish337/GoSell_Test.git')
+                }
+                branches('*/main')
+              }
+            }
+            scriptPath('Tools/Jenkins.jenkinsfile')
+            lightweight(true)
+          }
+        }
+      }
 
 credentials:
   system:

@@ -171,6 +171,36 @@ resource "aws_security_group_rule" "agent_ssh" {
   description       = "SSH from my IP"
 }
 
+resource "aws_security_group_rule" "agent_front" {
+  type              = "ingress"
+  from_port         = 5092
+  to_port           = 5092
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.jenkins_agent_sg.id
+  description       = "Frontend"
+}
+
+resource "aws_security_group_rule" "agent_back" {
+  type              = "ingress"
+  from_port         = 5817
+  to_port           = 5817
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.jenkins_agent_sg.id
+  description       = "Backend"
+}
+
+resource "aws_security_group_rule" "agent_db" {
+  type              = "ingress"
+  from_port         = 5022
+  to_port           = 5022
+  protocol          = "tcp"
+  cidr_blocks       = [var.my_ip]
+  security_group_id = aws_security_group.jenkins_agent_sg.id
+  description       = "Database"
+}
+
 resource "aws_security_group_rule" "agent_from_master" {
   type                     = "ingress"
   from_port                = 0

@@ -15,7 +15,7 @@ services:
       - "5022:5432"
     environment:
       - POSTGRES_USER=olxapi
-      - POSTGRES_PASSWORD=*dmUntdOidd3d_#WTi4B9ZoZp%rSDj4Imds07djc*
+      - "POSTGRES_PASSWORD=*dmUntdOidd3d_#WTi4B9ZoZp%rSDj4Imds07djc*"
       - POSTGRES_DB=olxDb
     networks:
       - myAppNetwork
