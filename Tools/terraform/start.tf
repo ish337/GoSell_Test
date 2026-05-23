@@ -173,8 +173,8 @@ resource "aws_security_group_rule" "agent_ssh" {
 
 resource "aws_security_group_rule" "agent_front" {
   type              = "ingress"
-  from_port         = 5092
-  to_port           = 5092
+  from_port         = 80
+  to_port           = 80
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.jenkins_agent_sg.id
@@ -183,8 +183,8 @@ resource "aws_security_group_rule" "agent_front" {
 
 resource "aws_security_group_rule" "agent_back" {
   type              = "ingress"
-  from_port         = 5817
-  to_port           = 5817
+  from_port         = 8080
+  to_port           = 8080
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.jenkins_agent_sg.id
