@@ -32,7 +32,7 @@ services:
     build: ../OLX.API
     image: olx-asp-api
     ports:
-      - "5817:8080"
+      - "8080:8080"
     networks:
      - myAppNetwork
     depends_on:
@@ -51,6 +51,6 @@ services:
     image: olx-client
     restart: on-failure
     ports:
-      - "5092:80"
+      - "80:80"
     networks:
       - myAppNetwork
