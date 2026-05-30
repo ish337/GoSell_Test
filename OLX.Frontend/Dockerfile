@@ -1,30 +1,19 @@
-# Виберіть базовий образ
-FROM node:18 AS build
-
-# Встановіть робочий каталог
+# ── Stage 1: Install dependencies (cached unless package*.json change) ───────
+FROM node:18 AS deps
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Скопіюйте package.json і package-lock.json
-COPY package*.json ./
-
-# Встановіть залежності
-RUN npm install
-
-# Скопіюйте весь код
+# ── Stage 2: Build the app (source code only — no node_modules in context) ───
+FROM node:18 AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Побудуйте проект
 RUN npm run build
 
-# Виберіть образ для продакшн
+# ── Stage 3: Production image ───────────────────────────────────────────────
 FROM nginx:alpine
-# Скопіюйте побудовані файли в каталог для сервера
 COPY --from=build /app/dist /usr/share/nginx/html
-# Скопіюйте nginx налаштування в каталог для сервера
-RUN rm /etc/nginx/conf.d/default.conf
-COPY nginx/nginx.conf /etc/nginx/conf.d
-# Відкрийте порт для сервера
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-
-# Запустіть Nginx
 CMD ["nginx", "-g", "daemon off;"]
